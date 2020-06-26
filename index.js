@@ -870,8 +870,23 @@ export default class VideoPlayer extends Component {
     this.player.volumePanResponder = PanResponder.create({
       onStartShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
+
+      /* tap to handle volume */
       onPanResponderGrant: (evt, gestureState) => {
+        const { state } = this
         this.clearControlTimeout()
+        const position = evt.nativeEvent.locationX
+
+        this.setVolumePosition(position)
+        state.volume = this.calculateVolumeFromVolumePosition()
+
+        if (state.volume <= 0) {
+          state.muted = true
+        } else {
+          state.muted = false
+        }
+
+        this.setState(state)
       },
 
       /**
@@ -957,7 +972,7 @@ export default class VideoPlayer extends Component {
             height: 50,
             alignSelf: 'center',
             padding: 0,
-            marginTop: this.state.height / 4,
+            marginTop: this.state.height / 4 - 10,
           },
           style,
         ]}
@@ -1030,7 +1045,9 @@ export default class VideoPlayer extends Component {
    */
   renderVolume() {
     return (
-      <View style={styles.volume.container}>
+      <View style={styles.volume.container}
+        {...this.player.volumePanResponder.panHandlers}
+      >
         <View
           style={[styles.volume.fill, { width: this.state.volumeFillWidth }]}
         />
@@ -1039,7 +1056,6 @@ export default class VideoPlayer extends Component {
         />
         <View
           style={[styles.volume.handle, { left: this.state.volumePosition }]}
-          {...this.player.volumePanResponder.panHandlers}
         >
           <Image
             style={styles.volume.icon}
@@ -1455,7 +1471,7 @@ const styles = {
       alignItems: 'center',
       justifyContent: 'flex-start',
       flexDirection: 'row',
-      height: 1,
+      height: 20,
       marginLeft: 20,
       marginRight: 20,
       width: 150,
